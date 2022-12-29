@@ -5,8 +5,13 @@ from _thread import start_new_thread
 
 def responseCommand(conn):
     while True:
-        conn.recv(1024)  # wait for client to send data
-        conn.send(b'+PONG\r\n')
+        msg = conn.recv(1024)  # wait for client to send data
+
+        if msg.decode() in ('*1\r\n$4\r\nping\r\n', '*1\r\n$4\r\nPING\r\n'):
+            conn.send(b'+PONG\r\n')
+        elif msg.decode() != '':
+            echo_str = msg.decode().split('\r\n')[4]
+            conn.send(f"+{echo_str}".encode())
 
 
 def main():
