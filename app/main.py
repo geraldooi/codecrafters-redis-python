@@ -4,6 +4,8 @@ from threading import Thread
 
 from .resp_decoder import RESPDecoder
 
+data = {}
+
 
 def handleConnection(conn):
     while True:
@@ -13,6 +15,11 @@ def handleConnection(conn):
             if command == b"ping":
                 conn.send(b"+PONG\r\n")
             elif command == b'echo':
+                conn.send(b"$%d\r\n%b\r\n" % (len(args[0]), args[0]))
+            elif command == b'set':
+                data[args[0]] = args[1]
+                conn.send(b"+OK\r\n")
+            elif command == b'get':
                 conn.send(b"$%d\r\n%b\r\n" % (len(args[0]), args[0]))
             else:
                 conn.send(b"-ERR unknown command\r\n")

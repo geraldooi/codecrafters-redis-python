@@ -7,13 +7,13 @@ class ConnectionBuffer:
         while delimiter not in self.buffer:
             data = self.connection.recv(1024)
 
-        if not data:
-            return None
+            if not data:
+                return None
 
-        self.buffer += data
+            self.buffer += data
 
-        data_before_delimiter, delimeter, self.buffer = self.buffer.partition(
-            delimeter)
+        data_before_delimiter, delimiter, self.buffer = self.buffer.partition(
+            delimiter)
 
         return data_before_delimiter
 
@@ -53,8 +53,7 @@ class RESPDecoder:
         bulk_string_length = int(self.connection.read_until_delimeter(b"\r\n"))
         data = self.connection.read(bulk_string_length)
 
-        assert self.connection.read_until_delimeter(
-            b"\r\n") == b"", "Incorrect bulk_string_length, it should be ''"
+        assert self.connection.read_until_delimeter(b"\r\n") == b""
 
         return data
 
