@@ -1,5 +1,6 @@
 # Uncomment this to pass the first stage
 import socket
+import time
 from threading import Thread
 
 from .resp_decoder import RESPDecoder
@@ -17,10 +18,24 @@ def handleConnection(conn):
             elif command == b'echo':
                 conn.send(b"$%d\r\n%b\r\n" % (len(args[0]), args[0]))
             elif command == b'set':
-                data[args[0]] = args[1]
+                expiry = None
+
+                # if expiry set, store datetime of expiry
+                if len(args) > 2:
+                    expiry = int(time.time() * 1000) + int(args[3])
+
+                # Set key value
+                data[args[0]] = (args[1], expiry)
                 conn.send(b"+OK\r\n")
+
             elif command == b'get':
-                conn.send(b"$%d\r\n%b\r\n" % (len(args[0]), args[0]))
+                value, expiry = data[args[0]]
+
+                if expiry is not None and expiry <= int(time.time() * 1000):
+                    del data[args[0]]
+                    conn.send(b"$-1\r\n")
+                else:
+                    conn.send(b"$%d\r\n%b\r\n" % (len(value), value))
             else:
                 conn.send(b"-ERR unknown command\r\n")
         except ConnectionError:
